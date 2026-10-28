@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: bastion-coop-server
+    runtime: node
+    plan: starter
+    rootDir: multiplayer-server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
