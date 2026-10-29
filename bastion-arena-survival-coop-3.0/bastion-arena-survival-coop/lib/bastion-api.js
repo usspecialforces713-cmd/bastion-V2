@@ -15,7 +15,7 @@ function dbConfig() {
     port: Number(process.env.DB_PORT || 5432),
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
-    database: process.env.DB_NAME || 'bastion',
+    database: process.env.DB_NAME ,
     ssl: sslmode === 'disable' ? false : { rejectUnauthorized: false }
   };
 }
