@@ -10,7 +10,9 @@
   const logout = $('account-logout');
   const openButton = $('account-open');
   const status = $('account-status');
+  const subtitle = document.querySelector('.account-subtitle');
   let mode = 'login';
+  let usePhp = false; // set when the server has no clean-URL rewrites (e.g. php -S, XAMPP without .htaccess)
   let currentUser = null;
 
   const readLocal = (key, fallback) => {
@@ -25,14 +27,18 @@
     best: readLocal('bastion-best', { wave: 0, score: 0 })
   });
   async function api(path, options = {}) {
-    const response = await fetch(`api/${path}`, {
+    const init = {
       credentials: 'same-origin', cache: 'no-store',
       ...options,
       headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) }
-    });
+    };
+    // Clean URL first (/api/auth); fall back to the PHP file if the server has no rewrite rules.
+    const phpPath = `/api/${path.replace(/^([^?]*)/, '$1.php')}`;
+    let response = await fetch(usePhp ? phpPath : `/api/${path}`, init);
+    if (!usePhp && response.status === 404) { usePhp = true; response = await fetch(phpPath, init); }
     let data;
-    try { data = await response.json(); } catch (_) { throw new Error('Réponse serveur invalide. Vérifie Apache et PHP.'); }
-    if (!response.ok || data.ok === false) throw new Error(data.message || `Erreur serveur (${response.status}).`);
+    try { data = await response.json(); } catch (_) { throw new Error('Serveur de comptes indisponible. Le jeu reste jouable en mode local.'); }
+    if (!response.ok || data.ok === false) throw new Error(data.error || data.message || `Erreur serveur (${response.status}).`);
     return data;
   }
   function showMessage(text, error = false) {
@@ -43,25 +49,26 @@
     mode = next;
     $('tab-login').classList.toggle('active', mode === 'login');
     $('tab-register').classList.toggle('active', mode === 'register');
-    $('account-title').textContent = mode === 'login' ? 'Connexion' : 'Créer un compte';
-    submit.textContent = mode === 'login' ? 'Se connecter' : 'Créer mon compte';
+    $('account-title').textContent = mode === 'login' ? t('login') : t('register');
+    submit.textContent = mode === 'login' ? t('login') : t('register');
+    $('tab-login').textContent = t('login'); $('tab-register').textContent = t('register'); logout.textContent = t('logout');
     passwordInput.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
     showMessage('');
   }
   function renderUser() {
     if (currentUser) {
-      status.textContent = `Compte : ${currentUser.username}`;
-      openButton.textContent = 'Mon compte';
-      $('account-title').textContent = `Bienvenue, ${currentUser.username}`;
-      $('account-subtitle').textContent = 'La sauvegarde locale et la synchronisation en ligne sont actives.';
+      status.textContent = `● ${currentUser.username}`;
+      openButton.textContent = t('account');
+      $('account-title').textContent = currentUser.username;
+      if (subtitle) subtitle.textContent = t('accountSub');
       form.hidden = true;
       $('account-tabs').hidden = true;
       logout.hidden = false;
-      showMessage('Connecté · synchronisation activée.');
+      showMessage('✓');
     } else {
-      status.textContent = 'Mode local';
-      openButton.textContent = 'Connexion';
-      $('account-subtitle').textContent = 'Synchronise tes records et statistiques sur ce serveur.';
+      status.textContent = t('guest');
+      openButton.textContent = t('signin');
+      if (subtitle) subtitle.textContent = t('accountSub');
       form.hidden = false;
       $('account-tabs').hidden = false;
       logout.hidden = true;
@@ -84,9 +91,11 @@
     return { profile, best };
   }
   async function syncAfterLogin() {
-    const loaded = await api('load.php');
+    const loaded = await api('load');
     const merged = mergeAndStore(loaded.save || {});
-    await api('save.php', { method: 'POST', body: JSON.stringify(merged) });
+    document.dispatchEvent(new CustomEvent('bastion-auth', { detail: { user: currentUser, progress: loaded.save && loaded.save.progress } }));
+    const local = (() => { try { return JSON.parse(localStorage.getItem('bastion-v3')); } catch (_) { return null; } })();
+    await api('save', { method: 'POST', body: JSON.stringify({ ...merged, progress: local || undefined }) });
   }
   openButton.addEventListener('click', () => { modal.hidden = false; if (!currentUser) usernameInput.focus(); });
   $('account-close').addEventListener('click', () => { modal.hidden = true; });
@@ -97,15 +106,15 @@
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     submit.disabled = true;
-    showMessage(mode === 'login' ? 'Connexion…' : 'Création du compte…');
+    showMessage('…');
     try {
-      const result = await api('auth.php', { method: 'POST', body: JSON.stringify({ action: mode === 'login' ? 'login' : 'register', username: usernameInput.value.trim(), password: passwordInput.value }) });
+      const result = await api('auth', { method: 'POST', body: JSON.stringify({ action: mode === 'login' ? 'login' : 'register', username: usernameInput.value.trim(), password: passwordInput.value }) });
       currentUser = result.user;
       passwordInput.value = '';
       renderUser();
       try {
         await syncAfterLogin();
-        showMessage('Connecté · sauvegarde locale synchronisée avec le serveur.');
+        showMessage('✓ ' + t('accountSub'));
       } catch (syncError) {
         showMessage(`Compte connecté, mais synchronisation impossible : ${syncError.message}`, true);
       }
@@ -116,28 +125,30 @@
   logout.addEventListener('click', async () => {
     logout.disabled = true;
     try {
-      await api('me.php', { method: 'POST', body: JSON.stringify({ action: 'logout' }) });
-      currentUser = null; renderUser(); setMode('login'); showMessage('Déconnecté. La sauvegarde locale reste disponible.');
+      await api('me', { method: 'POST', body: JSON.stringify({ action: 'logout' }) });
+      currentUser = null; renderUser(); setMode('login'); showMessage('✓'); document.dispatchEvent(new CustomEvent('bastion-auth', { detail: { user: null } }));
     } catch (error) { showMessage(error.message || 'Déconnexion impossible.', true); }
     finally { logout.disabled = false; }
   });
   window.BastionCloud = {
+    api,
+    user: () => currentUser,
     isLoggedIn: () => !!currentUser,
     save: async (data) => {
-      writeLocal('bastion-profile', data.profile);
-      writeLocal('bastion-best', data.best);
+      if (data.profile) writeLocal('bastion-profile', data.profile);
+      if (data.best) writeLocal('bastion-best', data.best);
       if (!currentUser) return { localOnly: true };
-      return api('save.php', { method: 'POST', body: JSON.stringify(data) });
+      return api('save', { method: 'POST', body: JSON.stringify(data) });
     },
     load: async () => {
       if (!currentUser) return localData();
-      const loaded = await api('load.php');
+      const loaded = await api('load');
       return mergeAndStore(loaded.save || {});
     }
   };
   async function init() {
     try {
-      const data = await api('me.php');
+      const data = await api('me');
       currentUser = data.user || null;
       renderUser();
       if (currentUser) {
@@ -145,11 +156,13 @@
         catch (error) { console.warn('[Bastion] Synchronisation initiale impossible:', error.message); }
       }
     } catch (error) {
-      status.textContent = 'Mode local · serveur indisponible';
+      status.textContent = t('guest');
+      status.title = 'Serveur de comptes indisponible : la sauvegarde reste locale.';
       console.warn('[Bastion] API non disponible:', error.message);
     }
   }
   setMode('login');
   renderUser();
+  document.addEventListener('langchange', () => { setMode(mode); renderUser(); });
   init();
 })();

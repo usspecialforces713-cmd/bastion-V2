@@ -9,13 +9,15 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1); // Render passe par un proxy HTTPS
 app.use(express.json({ limit: '100kb' }));
 
-// Routes API
+// Routes API (comptes, sauvegarde, présence, classement)
 const routes = {
   '/api/health': require('./api/health'),
   '/api/auth': require('./api/auth'),
   '/api/me': require('./api/me'),
   '/api/save': require('./api/save'),
-  '/api/load': require('./api/load')
+  '/api/load': require('./api/load'),
+  '/api/presence': require('./api/presence'),
+  '/api/leaderboard': require('./api/leaderboard')
 };
 for (const [route, handler] of Object.entries(routes)) {
   app.all(route, async (req, res) => {
@@ -29,7 +31,7 @@ for (const [route, handler] of Object.entries(routes)) {
 }
 
 // Fichiers publics en liste blanche : pas de code serveur, pas de config, pas de .env
-const PUBLIC_FILE = /^\/(index\.html|styles\.css|account\.js|multiplayer\.js|game-(core|combat|boss|systems)\.js|[a-z_]+\.glb)$/;
+const PUBLIC_FILE = /^\/(index\.html|styles\.css|account\.js|ui\.js|i18n\.js|multiplayer\.js|game-(core|combat|boss|systems)\.js|[a-z_]+\.glb)$/;
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get(PUBLIC_FILE, (req, res) => {
   res.sendFile(req.path.slice(1), { root: ROOT }, (err) => {

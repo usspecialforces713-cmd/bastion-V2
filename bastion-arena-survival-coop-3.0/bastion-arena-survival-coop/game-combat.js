@@ -10,6 +10,7 @@ const DESC={tireur:'Tir à distance. Spécial : Kamehameha.',guerrier:'Coups tr�
  joker:'Effets aléatoires. Spécial : roulette à 7 résultats.',pirate:'Boulets de canon explosifs. Spécial : navire qui bombarde un côté.',chasseur:'Chaînes qui immobilisent. Spécial : cage sur l’ennemi le plus fort.',
  maree:'Jets d’eau qui repoussent. Spécial : tsunami qui traverse l’arène.',vent:'Bourrasque qui repousse, ralentit et renvoie les tirs ennemis. Spécial : tornade qui aspire puis disperse.',
  sable:'Jets de sable qui aveuglent. Spécial : tempête de sable qui ronge.',magnet:'Orbe qui regroupe les ennemis à distance, émetteur répulsif. Spécial : aimant géant qui colle puis explose.'};
+const TOUCH=matchMedia('(pointer:coarse)').matches;
 const CHARGED_MOVES={
   guerrier:{name:'Brise-garde',kind:'melee',min:.25,max:1.25,color:0xffc857,desc:'Frappe lourde en arc'},
   gardien:{name:'Onde du rempart',kind:'slam',min:.35,max:1.4,color:0x72c9ff,desc:'Onde de choc autour du tank'},
@@ -22,26 +23,8 @@ const CHARGED_MOVES={
   dragon:{name:'Souffle draconique',kind:'shot',min:.35,max:1.5,color:0xffb347,desc:'Souffle concentré'}
 };
 
-function menu(){
-  const o=$('ov');o.hidden=false;
-  o.innerHTML=`<div class="menu-shell"><div class="menu-top"><div class="brand-mark">B<span>✦</span></div><div><div class="eyebrow">SURVIVAL TACTIQUE · ROGUELITE</div><h1>BASTION <em>ARENA</em></h1><p class="menu-sub">Formez votre escouade. Tenez la ligne. Brisez les vagues.</p></div><div class="version-tag">VERSION 2.3<br><small>HERO COMBAT</small></div></div><div class="menu-layout"><section class="menu-main"><div class="section-head"><div><span class="eyebrow">01 / PRÉPARATION</span><h2>Choisissez vos héros</h2></div><div class="squad-count" id="cnt">0 / 6</div></div><p class="menu-copy">Composez une escouade de 1 à 6 héros. Le premier héros sélectionné est contrôlé directement ; les autres combattent de façon autonome selon leur rôle.</p><input id="hero-search" class="hero-search" type="search" placeholder="Rechercher une classe…" aria-label="Rechercher un héros"><div id="pickers" class="hero-grid"></div><div class="menu-actions"><button id="go2" class="primary-action">LANCER UNE PARTIE <span>→</span></button><button id="go3" class="secondary-action">DÉFI MÉGA BOSS</button></div></section><aside class="menu-side"><div class="side-panel"><span class="eyebrow">02 / DOSSIER DE COMBAT</span><h3>Votre légende</h3><div class="record-grid"><div><small>MEILLEUR SCORE</small><strong id="stat-score">—</strong></div><div><small>MEILLEURE VAGUE</small><strong id="stat-wave">—</strong></div><div><small>PARTIES</small><strong id="stat-runs">0</strong></div><div><small>ÉLIMINATIONS</small><strong id="stat-kills">0</strong></div></div><div id="bst" class="record-note"></div></div><div class="side-panel"><span class="eyebrow">03 / COMMANDES</span><h3>Combat opérationnel</h3><div class="key-row"><kbd>Z Q S D</kbd><span>Déplacement</span></div><div class="key-row"><kbd>Clic / Espace</kbd><span>Attaquer</span></div><div class="key-row"><kbd>Maj</kbd><span>Esquive parfaite</span></div><div class="key-row"><kbd>E / clic droit</kbd><span>Capacité spéciale</span></div><div class="key-row"><kbd>Maintenir R</kbd><span>Moveset chargé (héros compatibles)</span></div><div class="key-row"><kbd>1–6 / Tab</kbd><span>Changer de héros</span></div><div class="key-row"><kbd>V</kbd><span>Ordre de l’escouade</span></div><div class="key-row"><kbd>F</kbd><span>Cible prioritaire</span></div><div class="key-row"><kbd>P / Échap</kbd><span>Pause</span></div></div><p class="menu-foot">PROGRESSION ROGUELITE · AMÉLIORATIONS PAR PARTIE · SAUVEGARDE LOCALE</p></aside></div></div>`;
-  const grid=$('pickers');
-  const draw=()=>{
-    grid.innerHTML='';const q=($('hero-search').value||'').trim().toLocaleLowerCase('fr');
-    Object.keys(ROLES).filter(k=>(ROLES[k].name+' '+(DESC[k]||'')).toLocaleLowerCase('fr').includes(q)).forEach(k=>{
-      const r=ROLES[k],on=SEL.includes(k),b=document.createElement('button');
-      b.className='hero-card'+(on?' selected':'');b.style.setProperty('--hero-color','#'+r.col.toString(16).padStart(6,'0'));
-      const roleTag=({tireur:'DISTANCE',archer:'DISTANCE',ingenieur:'TECH',mecha:'TECH',medic:'SOUTIEN',paladin:'SOUTIEN',gardien:'TANK',terre:'TANK',assassin:'ASSAUT',ombre:'ASSAUT',samourai:'ASSAUT',guerrier:'CORPS À CORPS',fighter:'CORPS À CORPS',mage:'MAGIE',neant:'MAGIE',pyro:'MAGIE',meteor:'MAGIE',givre:'MAGIE',volt:'MAGIE',necro:'INVOCATION',druide:'TRANSFORM.',plant:'CONTRÔLE',toxine:'CONTRÔLE',chasseur:'CONTRÔLE',maree:'CONTRÔLE',vent:'CONTRÔLE',sable:'CONTRÔLE',magnet:'CONTRÔLE',dragon:'TRANSFORM.',joker:'SPÉCIAL',miroir:'SPÉCIAL',boomerang:'DISTANCE',pirate:'DISTANCE'})[k]||'COMBAT';
-      const move=CHARGED_MOVES[k];b.innerHTML='<span class="hero-number">'+(on?String(SEL.indexOf(k)+1).padStart(2,'0'):'＋')+'</span><span class="hero-info"><b>'+r.name+'</b><span class="role-tag">'+roleTag+'</span><small>'+DESC[k]+'</small>'+(move?'<span class="moveset-tag">R · '+move.name+'</span>':'')+'</span><span class="hero-check">'+(on?'✓':'＋')+'</span>';
-      b.setAttribute('aria-pressed',String(on));b.onclick=()=>{if(on)SEL=SEL.filter(x=>x!==k);else if(SEL.length<6)SEL=[...SEL,k];draw()};grid.appendChild(b);
-    });
-    $('cnt').textContent=SEL.length+' / 6 HÉROS';$('go2').disabled=!SEL.length;$('go3').disabled=!SEL.length;
-  };
-  $('hero-search').addEventListener('input',draw);draw();
-  try{const b=JSON.parse(localStorage.getItem('bastion-best'));const p=JSON.parse(localStorage.getItem('bastion-profile'))||{runs:0,kills:0,highestLevel:1};$('stat-score').textContent=b?b.score:'—';$('stat-wave').textContent=b?b.wave:'—';$('stat-runs').textContent=p.runs||0;$('stat-kills').textContent=p.kills||0;if(b)$('bst').textContent='Record enregistré dans ce navigateur · Niveau max '+(p.highestLevel||1)}catch(e){}
-  $('go2').onclick=()=>{reset();S.megaOnly=false;startWave()};$('go3').onclick=()=>{reset();S.megaOnly=true;megaPick()};
-}
-menu();
+// 3.0: the lobby/menus live in ui.js. menu() kept for older calls.
+function menu(){if(typeof UI!=='undefined')UI.lobby()}
 reset();
 
 const near=(p,list)=>list.reduce((b,o)=>{const d=Math.hypot(o.position.x-p.x,o.position.z-p.z);return d<b.d?{o,d}:b},{o:null,d:1e9});
@@ -76,7 +59,7 @@ function beginCombatAttack(c){
   if(!c.finisherReady)c.comboCount=Math.min(3,(c.comboCount||0)+1);
   if(c.comboCount>=3&&!c.finisherReady){
     c.finisherReady=true;
-    if(c===A){banner('ATTAQUE FINALE CHARGÉE !');snd(540,.12,'triangle');}
+    if(c===A)snd(540,.12,'triangle');
   }
   c.attackAnim=.36;c.attackStyle=attackStyle(c);
 }
@@ -114,7 +97,7 @@ function releaseChargedAttack(c){
 function updateChargeHud(){
   let el=$('moveset-hud');if(!el)return;const cfg=chargedMoveFor(A);
   if(!A||!cfg){el.hidden=true;return}el.hidden=false;
-  const t=A.chargeT||0,ratio=Math.min(1,t/cfg.max);el.innerHTML='<b>'+cfg.name+'</b><span>Maintenir R · relâcher pour frapper</span><i><u style="width:'+(ratio*100)+'%;background:#'+cfg.color.toString(16).padStart(6,'0')+'"></u></i>';
+  const ct=A.chargeT||0,ratio=Math.min(1,ct/cfg.max),key=cfg.name+LANG+Math.round(ratio*50);if(el.dataset.k===key){el.classList.toggle('charging',!!A.isCharging);return}el.dataset.k=key;el.innerHTML='<b>'+cfg.name+'</b><span>'+(LANG==='en'?'Hold R · release to strike':'Maintenir R · relâcher pour frapper')+'</span><i><u style="width:'+(ratio*100)+'%;background:#'+cfg.color.toString(16).padStart(6,'0')+'"></u></i>';
   el.classList.toggle('charging',!!A.isCharging);
 }
 
@@ -126,6 +109,8 @@ function act(c,dt,ctrl){
     mz=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.KeyZ||keys.ArrowUp?1:0);mx+=JV.x;mz+=JV.z;
     ray.setFromCamera(mouse,cam);if(ray.ray.intersectPlane(plane,aim))face=Math.atan2(aim.x-p.x,aim.z-p.z);
     wantFire=down||(keys.Space&&!S.mega)||keys.KeyJ;
+    // Touch devices: auto-aim + auto-fire at the nearest enemy when not aiming manually (Brawl-style).
+    if(TOUCH&&!down&&en.o&&en.d<15){face=Math.atan2(en.o.position.x-p.x,en.o.position.z-p.z);wantFire=true;if(c==A){aim.set(en.o.position.x,1,en.o.position.z)}}
   }else{
     const tx=en.o?en.o.position.x-p.x:0,tz=en.o?en.o.position.z-p.z:0,l=en.d||1;
     if(en.o)face=Math.atan2(tx,tz);
@@ -159,19 +144,19 @@ function act(c,dt,ctrl){
         const e=E[j],ex=e.position.x-p.x,ez=e.position.z-p.z;
         if(Math.hypot(ex,ez)<r.melee+(finisher?1.4:0)+e.userData.rad&&adf(ex,ez,fa)<w+(finisher?.45:.35)&&hv(p,e)){
           let dmg=r.mdmg+S.dm;if(finisher)dmg*=1.7+(S.comboBonus||0);
-          if(c===A&&Math.random()<(.12+(S.critBonus||0))){dmg*=2;banner('COUP CRITIQUE !');combatImpact(e.position,0xffc857,true)}
+          let mc=false;if(c===A&&Math.random()<(.12+(S.critBonus||0))){dmg*=2;mc=true;combatImpact(e.position,0xffc857,true)}
           else if(c===A)combatImpact(e.position,finisher?0xffc857:r.col,finisher);
           if(r.kb){const dd=Math.hypot(ex,ez)||1,k=r.kb*(e.userData.boss?.3:1)*(finisher?1.65:1);e.position.x+=ex/dd*k;e.position.z+=ez/dd*k;e.userData.hold=.15}
-          hitE(j,dmg,null);
+          hitE(j,dmg,null,mc);
         }
       }
-      if(finisher){c.finisherReady=false;c.comboCount=0;banner('FINISHER !');flash(p,3.5,0xffc857);QK=Math.max(QK,.18);S.hitStop=Math.max(S.hitStop||0,.055)}
+      if(finisher){c.finisherReady=false;c.comboCount=0;flash(p,3.5,0xffc857);QK=Math.max(QK,.18);S.hitStop=Math.max(S.hitStop||0,.055)}
     }
     else if(r==ROLES.pyro)flame(c);else if(r==ROLES.givre)shootX(c.g.position.x,c.g.position.z,c.g.rotation.y,0x9fe8ff,{slow:1});else if(r==ROLES.volt)field(c);else if(r==ROLES.necro)skel(c,false);else if(r==ROLES.toxine)vial(c,ctrl?aim:(en.o?en.o.position:null));else if(r==ROLES.archer)arrow(c);else if(r==ROLES.ombre)blink(c);else if(r==ROLES.paladin)holyRay(c);else if(r==ROLES.dragon)breathe(c);else if(r==ROLES.druide)thorn(c);else if(r==ROLES.mecha)gun(c);else if(r==ROLES.miroir)shootX(c.g.position.x,c.g.position.z,c.g.rotation.y,0xf4f4f4,{d:.5+S.dm*.3});else if(r==ROLES.boomerang)boom(c);else if(r==ROLES.joker)joke(c);else if(r==ROLES.pirate)cannon(c);else if(r==ROLES.chasseur)shootX(c.g.position.x,c.g.position.z,c.g.rotation.y,0xbbbbbb,{snare:1,d:S.dm+1.5,l:1.1});else if(r==ROLES.maree)jet(c);else if(r==ROLES.vent)gust(c);else if(r==ROLES.sable)sandjet(c);else if(r==ROLES.magnet)magShot(c);else if(r==ROLES.plant){shoot(c,c.g.rotation.y-.08,r.col);shoot(c,c.g.rotation.y+.08,r.col)}else if(r==ROLES.terre)stairs(c);else if(r==ROLES.meteor)rock(c,ctrl?aim:(en.o?en.o.position:null));else if(r==ROLES.neant)hole(c,ctrl?aim:(en.o?en.o.position:null),false);else shoot(c,c.g.rotation.y,r.col);
     if(c.finisherReady&&B.length>projectileStart){
       const fresh=B.slice(projectileStart);
       fresh.forEach(b=>{if(b.userData){b.userData.d=(b.userData.d||1)*(1.7+(S.comboBonus||0));b.userData.source=c;b.userData.finisher=1}});
-      c.finisherReady=false;c.comboCount=0;banner('FINISHER !');flash(p,2.4,0xffc857);QK=Math.max(QK,.12);
+      c.finisherReady=false;c.comboCount=0;flash(p,2.4,0xffc857);QK=Math.max(QK,.12);
     }
   }
   if(r==ROLES.medic){c.heal-=dt;if(c.heal<=0){c.heal=1.2;flash(p,6,0xb06bff);C.forEach(o=>{if(o.alive&&Math.hypot(o.g.position.x-p.x,o.g.position.z-p.z)<6)o.hp=Math.min(o.max,o.hp+5)});hud()}}
@@ -192,6 +177,8 @@ function act(c,dt,ctrl){
   if(u.torso)u.torso.position.y=1.57+Math.sin(c.t*2)*(c.mv?.045:.018)+(c.attackAnim>0?atk*.045:0);
   if(u.weapon){const recoil=style==='heavy'?-.95:style==='melee'?-.8:style==='cast'?-.22:style==='trick'?-.65:-.38;u.weapon.rotation.x=(c.mv?Math.sin(c.t)*.08:Math.sin(c.t*.5)*.025)+(c.attackAnim>0?atk*recoil:0);u.weapon.rotation.z=c.attackAnim>0?atk*(style==='melee'?.48:style==='trick'?.6:.14):0;}
   if(c.dodgeT>0){u.torso.rotation.x=-.2;u.arms[0].rotation.z=-.45;u.arms[1].rotation.z=.45;}else if(u.torso)u.torso.rotation.x*=.72;
-  if(c.dodgeFlash>0){c.dodgeFlash-=dt;u.aura.material.opacity=.38;}else if(u.aura)u.aura.material.opacity=.13+Math.sin(c.t*1.8)*.035;
-  if(u.aura){u.aura.material.opacity=.13+Math.sin(c.t*1.8)*.035;u.aura.scale.setScalar(1+Math.sin(c.t*1.5)*.035)}
+  if(u.aura){if(c.dodgeFlash>0){c.dodgeFlash-=dt;u.aura.material.opacity=.42}else u.aura.material.opacity=(c===A?.24:.13)+Math.sin(c.t*1.8)*.035;u.aura.scale.setScalar(1+Math.sin(c.t*1.5)*.035)}
+  // Accessory idle motion (halo, spell orb, cape) and invulnerability blink.
+  const tt=performance.now()*.001;if(u.halo){u.halo.position.y=2.72+Math.sin(tt*2.4+c.t*.1)*.05;u.halo.rotation.z+=dt}if(u.orb)u.orb.position.y=-.85+Math.sin(tt*4)*.06;if(u.cape)u.cape.rotation.x=.12+(c.mv?.35:0)+Math.sin(tt*3)*.04;
+  c.g.visible=!c.off&&c.alive&&!(c.inv>0&&c.inv<.7&&c.dodgeT<=0&&Math.sin(tt*40)>.6);
 }

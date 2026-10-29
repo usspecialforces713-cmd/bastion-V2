@@ -1,0 +1,82 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+
+<title>Bastion Arena</title>
+<meta name="theme-color" content="#05040f">
+<meta name="description" content="Bastion Arena: neon squad survival roguelite in 3D. Build a squad, survive the waves, climb the leaderboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Space+Grotesk:wght@400;500;700&family=Unbounded:wght@600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>document.body.dataset.mode="menu"</script>
+
+<div id="boot"><div class="boot-logo">B</div><div class="boot-bar"><i></i></div><small>LOADING ARENA</small></div>
+<div id="c"></div>
+
+<!-- Persistent account chip (used by account.js) -->
+<div id="account-bar" class="account-bar">
+  <span id="account-status">Local</span>
+  <button id="account-open" type="button">Sign in</button>
+</div>
+<div id="account-modal" class="account-modal" hidden>
+  <section class="account-card" role="dialog" aria-modal="true" aria-labelledby="account-title">
+    <button id="account-close" class="account-close" type="button" aria-label="Close">×</button>
+    <p class="account-eyebrow">BASTION NETWORK</p>
+    <h2 id="account-title">Account</h2>
+    <p class="account-subtitle"></p>
+    <div id="account-tabs" class="account-tabs"><button type="button" id="tab-login" class="active">Sign in</button><button type="button" id="tab-register">Create account</button></div>
+    <form id="account-form">
+      <label for="account-username" data-i18n="username">Username</label><input id="account-username" name="username" autocomplete="username" minlength="3" maxlength="24" required>
+      <label for="account-password" data-i18n="password">Password</label><input id="account-password" name="password" type="password" autocomplete="current-password" minlength="8" required>
+      <button id="account-submit" class="account-submit" type="submit">Sign in</button>
+    </form>
+    <button id="account-logout" class="account-logout" type="button" hidden>Sign out</button>
+    <p id="account-message" role="status" aria-live="polite"></p>
+    <p class="account-small" data-i18n="accSmall"></p>
+  </section>
+</div>
+
+<!-- In-match HUD -->
+<div id="hud">
+  <div class="hud-row"><div><small data-i18n="wave">WAVE</small><span id="w">0</span></div><div><small data-i18n="score">SCORE</small><span id="s">0</span></div><div><small data-i18n="enemies">ENEMIES</small><span id="left">0</span></div></div>
+  <div id="xp">LVL 1 · XP 0/12</div><i id="xp-bar"><u></u></i>
+</div>
+<div id="timer" hidden><b>3:00</b><small data-i18n="time">TIME</small></div>
+<div id="pu-chip" hidden></div>
+<div id="boss" hidden>BOSS<i><u></u></i></div>
+<div id="hero-panel"><div class="hp-top"><b id="hp-name">—</b><span id="hp-num">0 / 0</span></div><i class="bar hp"><u id="hp-fill"></u></i><i class="bar sp"><u id="sp-fill"></u></i><div class="hp-sub"><span id="sp-txt"></span><i class="bar dg"><u id="dg-fill"></u></i></div></div>
+<div id="moveset-hud" hidden aria-live="polite"></div>
+<div id="dn"></div><div id="damage-flash" aria-hidden="true"></div><div id="dodge" aria-hidden="true">DODGE</div><div id="combat-hint"></div>
+<div id="combo-hud" aria-live="polite"><span class="combo-label">COMBO</span><strong id="combo-count">0</strong><span id="combo-note"></span></div>
+<button id="pz" aria-label="Pause">❚❚</button><button id="mute" aria-label="Mute">🔊</button><button id="ord"></button>
+<button id="sp">SKILL</button><button id="jp">JUMP</button><button id="dg">DASH</button>
+<div id="joy" aria-hidden="true"><span></span></div><div id="low-hp" aria-hidden="true"></div>
+<div id="ban"></div>
+<div id="team"></div>
+<div id="ov"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="i18n.js"></script>
+<script src="game-core.js"></script>
+<script src="game-combat.js"></script>
+<script src="game-boss.js"></script>
+<script src="game-systems.js"></script>
+<script src="account.js"></script>
+<script src="ui.js"></script>
+<script>window.BASTION_MULTIPLAYER_URL = window.BASTION_MULTIPLAYER_URL || "wss://bastion-coop-server.onrender.com";</script>
+<script src="multiplayer.js" defer></script>
+<script>
+  // Static labels in the HTML follow the selected language.
+  function applyStaticI18n(){document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));const m={sp:'mobileAbility',jp:'mobileJump',dg:'mobileDodge'};for(const id in m){const b=document.getElementById(id);if(b)b.textContent=t(m[id])}const d=document.getElementById('dodge');if(d)d.textContent=t('dodge')}
+  document.addEventListener('langchange',applyStaticI18n);applyStaticI18n();
+  let booted=false;const bootNow=()=>{if(!booted){booted=true;UI.boot()}};(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(bootNow,250));setTimeout(bootNow,2500);
+</script>
+
+<div id="mp-bar" class="mp-bar"><span id="mp-status">Solo · non connecté</span><button id="mp-open" type="button">Coop en ligne</button></div>
+<div id="mp-modal" class="mp-modal" hidden><section class="mp-card" role="dialog" aria-modal="true" aria-labelledby="mp-title"><button id="mp-close" class="mp-close" type="button" aria-label="Fermer">×</button><p class="mp-eyebrow">BASTION CO-OP</p><h2 id="mp-title">Jouer avec un ami</h2><p>Crée une salle ou rejoins ton ami avec son code. Maximum 2 joueurs.</p><label for="mp-name">Ton pseudo</label><input id="mp-name" maxlength="20" value="Warrior" autocomplete="nickname"><label for="mp-code">Code de salle</label><input id="mp-code" maxlength="6" placeholder="Ex. A7K2QF" autocapitalize="characters"><div class="mp-actions"><button id="mp-create" type="button">Créer une salle</button><button id="mp-join" type="button">Rejoindre</button></div><p id="mp-message" role="status" aria-live="polite">Le serveur multijoueur doit être déployé et configuré.</p><p class="mp-small">La connexion en ligne nécessite le serveur WebSocket inclus dans le ZIP. Le mode solo reste disponible.</p></section></div>
+</body></html>
