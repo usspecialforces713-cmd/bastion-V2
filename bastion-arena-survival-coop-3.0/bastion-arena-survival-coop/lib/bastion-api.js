@@ -2,12 +2,30 @@ const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
 let pool;
+function dbConfig() {
+  if (process.env.DATABASE_URL) {
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false
+    };
+  }
+  if (!process.env.DB_HOST) throw new Error('Configuration base manquante : DB_HOST');
+  const sslmode = String(process.env.DB_SSLMODE || 'disable').toLowerCase();
+  return {
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT || 5432),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME || 'bastion',
+    ssl: sslmode === 'disable' ? false : { rejectUnauthorized: false }
+  };
+}
+
+let pool;
 function db() {
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured');
   if (!pool) {
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false,
+      ...dbConfig(),
       max: 3,
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 10000
