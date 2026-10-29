@@ -31,7 +31,7 @@ for (const [route, handler] of Object.entries(routes)) {
 }
 
 // Fichiers publics en liste blanche : pas de code serveur, pas de config, pas de .env
-const PUBLIC_FILE = /^\/(index\.html|styles\.css|account\.js|ui\.js|i18n\.js|multiplayer\.js|game-(core|combat|boss|systems)\.js|[a-z_]+\.glb)$/;
+const PUBLIC_FILE = /^\/(index\.html|styles\.css|account\.js|ui\.js|i18n\.js|multiplayer\.js|game-(core|combat|boss|systems)\.js|bastion-arena-logo\.svg|[a-z_]+\.glb)$/;
 app.get('/', (req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.get(PUBLIC_FILE, (req, res) => {
   res.sendFile(req.path.slice(1), { root: ROOT }, (err) => {
