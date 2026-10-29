@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Bastion Arena Survival 2.5 — Coop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="c"></div>
+<div id="mp-bar" class="mp-bar"><span id="mp-status">Solo · non connecté</span><button id="mp-open" type="button">Coop en ligne</button></div>
+<div id="mp-modal" class="mp-modal" hidden><section class="mp-card" role="dialog" aria-modal="true" aria-labelledby="mp-title"><button id="mp-close" class="mp-close" type="button" aria-label="Fermer">×</button><p class="mp-eyebrow">BASTION CO-OP</p><h2 id="mp-title">Jouer avec un ami</h2><p>Crée une salle ou rejoins ton ami avec son code. Maximum 2 joueurs.</p><label for="mp-name">Ton pseudo</label><input id="mp-name" maxlength="20" value="Warrior" autocomplete="nickname"><label for="mp-code">Code de salle</label><input id="mp-code" maxlength="6" placeholder="Ex. A7K2QF" autocapitalize="characters"><div class="mp-actions"><button id="mp-create" type="button">Créer une salle</button><button id="mp-join" type="button">Rejoindre</button></div><p id="mp-message" role="status" aria-live="polite">Le serveur multijoueur doit être déployé et configuré.</p><p class="mp-small">La connexion en ligne nécessite le serveur WebSocket inclus dans le ZIP. Le mode solo reste disponible.</p></section></div>
+<div id="account-bar" class="account-bar">
+  <span id="account-status">Mode local</span>
+  <button id="account-open" type="button">Connexion</button>
+</div>
+<div id="account-modal" class="account-modal" hidden>
+  <section class="account-card" role="dialog" aria-modal="true" aria-labelledby="account-title">
+    <button id="account-close" class="account-close" type="button" aria-label="Fermer">×</button>
+    <p class="account-eyebrow">BASTION NETWORK</p>
+    <h2 id="account-title">Ton compte</h2>
+    <p class="account-subtitle">Synchronise tes records et statistiques sur ce serveur.</p>
+    <div id="account-tabs" class="account-tabs"><button type="button" id="tab-login" class="active">Connexion</button><button type="button" id="tab-register">Créer un compte</button></div>
+    <form id="account-form">
+      <label for="account-username">Nom d'utilisateur</label><input id="account-username" name="username" autocomplete="username" minlength="3" maxlength="24" required>
+      <label for="account-password">Mot de passe</label><input id="account-password" name="password" type="password" autocomplete="current-password" minlength="8" required>
+      <button id="account-submit" class="account-submit" type="submit">Se connecter</button>
+    </form>
+    <button id="account-logout" class="account-logout" type="button" hidden>Se déconnecter</button>
+    <p id="account-message" role="status" aria-live="polite"></p>
+    <p class="account-small">La sauvegarde locale reste active même sans connexion. Utilise un mot de passe unique.</p>
+  </section>
+</div>
+<div id="hud"><div>Vague <span id="w">0</span></div><div>Score <span id="s">0</span></div><div id="xp">Niv. 1 · XP 0/12</div></div>
+<div id="boss" hidden>BOSS<i><u></u></i></div>
+<div id="moveset-hud" hidden aria-live="polite"></div><div id="dn"></div><div id="damage-flash" aria-hidden="true"></div><div id="dodge" aria-hidden="true">ESQUIVE</div><div id="combat-hint">MAJ · ESQUIVE</div><div id="combo-hud" aria-live="polite"><span class="combo-label">COMBO</span><strong id="combo-count">0</strong><span id="combo-note">enchaîne les attaques</span></div><button id="pz">⏸</button><button id="ord"></button><button id="sp">Capacité</button><button id="jp">Saut</button><button id="dg">Esquive</button>
+<div id="ban"></div>
+<div id="team"></div>
+<div id="ov"><div class="box"><h1>Bastion</h1>
+<p>Vous dirigez une escouade de six héros (Tireur, Fighter, Médic, Mage, Assassin, Néant). Changez de personnage avec 1 à 6 ou Tab (ou en cliquant sa carte). Ceux que vous ne dirigez pas se battent seuls. Déplacement : ZQSD ou flèches. Visée à la souris, tir avec le clic maintenu ou Espace. Maj (Shift) ou bouton mobile « Esquive » : esquive rapide avec brève invulnérabilité (recharge 1,15 s). Coups critiques possibles. Capacité spéciale : touche E ou clic droit (les héros autonomes l’utilisent seuls). Des boss arrivent toutes les 2 vagues, de plus en plus nombreux. Chaque capacité dure 6 secondes. Éliminez des ennemis pour gagner de l’XP : chaque niveau débloque un choix d’amélioration temporaire.</p>
+<button id="go">Lancer la première vague</button></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="game-core.js" defer></script>
+<script src="game-combat.js" defer></script>
+<script src="game-boss.js" defer></script>
+<script src="game-systems.js" defer></script>
+<script src="account.js" defer></script>
+<script>window.BASTION_MULTIPLAYER_URL = window.BASTION_MULTIPLAYER_URL || "wss://bastion-coop-server.onrender.com";</script>
+<script src="multiplayer.js" defer></script>
+</body>
+</html>

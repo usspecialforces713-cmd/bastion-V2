@@ -1,0 +1,17 @@
+{
+  "name": "bastion-arena-survival-coop",
+  "version": "2.5.0",
+  "private": true,
+  "description": "Bastion Arena Survival : jeu, comptes et co-op 2 joueurs (PostgreSQL Render)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  }
+}

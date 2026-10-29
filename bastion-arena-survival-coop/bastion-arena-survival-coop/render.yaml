@@ -1,0 +1,32 @@
+databases:
+  - name: bastion-db
+    plan: free
+    databaseName: bastion
+    user: bastion
+
+services:
+  - type: web
+    name: bastion-arena
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bastion-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    name: bastion-coop-server
+    runtime: node
+    plan: free
+    rootDir: multiplayer-server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
