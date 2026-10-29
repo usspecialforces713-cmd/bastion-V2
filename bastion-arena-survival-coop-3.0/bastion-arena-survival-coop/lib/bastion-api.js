@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
-let pool;
 function dbConfig() {
   if (process.env.DATABASE_URL) {
     return {
