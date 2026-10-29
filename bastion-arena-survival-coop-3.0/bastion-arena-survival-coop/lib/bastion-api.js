@@ -2,12 +2,6 @@ const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
 function dbConfig() {
-  if (process.env.DATABASE_URL) {
-    return {
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.PGSSLMODE === 'require' ? { rejectUnauthorized: false } : false
-    };
-  }
   if (!process.env.DB_HOST) throw new Error('Configuration base manquante : DB_HOST');
   const sslmode = String(process.env.DB_SSLMODE || 'disable').toLowerCase();
   return {
