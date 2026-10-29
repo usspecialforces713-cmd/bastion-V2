@@ -1,0 +1,8 @@
+**/node_modules
+multiplayer-server
+api/*.php
+config
+database/*.php
+*.php
+Dockerfile
+.git
