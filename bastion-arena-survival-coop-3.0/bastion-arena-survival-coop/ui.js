@@ -245,7 +245,11 @@ const UI = (() => {
   }
 
   // ── Match flow ──
-  function launch(mode) {
+  // Exposé pour multiplayer.js : lancement reçu du serveur (net = true).
+  window.BastionLaunch = (m, net) => launch(m, net);
+  function launch(mode, net) {
+    if (!net && window.BastionMP && !window.BastionMP.requestStart(mode)) return;
+    if (net && S && ['countdown', 'play', 'pick'].includes(S.mode)) return;
     SEL = P.squad.filter(k => P.unlocked.includes(k)).slice(0, 6); if (!SEL.length) SEL = ['tireur'];
     reset(); S.modeId = mode; S.modeCfg = MODES[mode]; S.mods = mode === 'daily' ? dailyMods() : [];
     S.dailyFirst = mode === 'daily' && !(P.daily.date === today() && P.daily.done);
