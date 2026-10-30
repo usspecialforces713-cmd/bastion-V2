@@ -5,8 +5,8 @@
 (()=>{
  'use strict';
  const $=id=>document.getElementById(id);
- const CFG={serverUrl:window.BASTION_MULTIPLAYER_URL||'ws://localhost:8787'};
- let socket=null,room=null,playerId=null,peerId=null,remote=null,lastSend=0,joined=false,localName='Warrior',lastWave=-1;
+ const CFG={serverUrl:window.BASTION_MULTIPLAYER_URL||'wss://bastion-v2-web.onrender.com'};
+ let socket=null,room=null,playerId=null,peerId=null,remote=null,lastSend=0,joined=false,localName='Warrior',lastWave=-1,isHost=false;
  const status=$('mp-status'), modal=$('mp-modal'), msg=$('mp-message');
  function setStatus(t){if(status)status.textContent=t}
  function say(t){if(msg)msg.textContent=t}
@@ -31,7 +31,9 @@
  function send(data){if(socket&&socket.readyState===WebSocket.OPEN)socket.send(JSON.stringify(data))}
  function handle(d){
    if(d.type==='error'){say(d.message||'Erreur multijoueur');return}
-   if(d.type==='joined'){joined=true;room=d.room;playerId=d.playerId;peerId=d.peerId||null;$('mp-code').value=room;setStatus('Salle '+room+' · '+(d.count||1)+'/2');say(d.peerName?'Connecté avec '+d.peerName+'.':'Salle créée. Envoie le code '+room+' à ton ami.');close();return}
+   if(d.type==='role'){isHost=!!d.isHost;return}
+   if(d.type==='start'){say('Lancement de la partie…');if(window.BastionLaunch)window.BastionLaunch(d.mode,true);return}
+   if(d.type==='joined'){joined=true;isHost=!!d.isHost;room=d.room;playerId=d.playerId;peerId=d.peerId||null;$('mp-code').value=room;setStatus('Salle '+room+' · '+(d.count||1)+'/2');say(d.peerName?'Connecté avec '+d.peerName+'.':'Salle créée. Envoie le code '+room+' à ton ami.');close();return}
    if(d.type==='peer-joined'){peerId=d.playerId;setStatus('Salle '+room+' · 2/2');say((d.name||'Ton ami')+' a rejoint la salle.');return}
    if(d.type==='peer-left'){peerId=null;removeRemote();setStatus('Salle '+room+' · 1/2');say('Ton coéquipier a quitté la salle.');return}
    if(d.type==='state'){if(d.playerId!==playerId)updateRemote(d);return}
@@ -48,5 +50,7 @@
  // Announce run events without changing the existing solo wave logic.
  const hook=()=>{if(typeof window.startWave==='function'&&!window.startWave.__mpWrapped){const original=window.startWave;const wrapped=function(){const result=original.apply(this,arguments);if(joined)send({type:'event',event:'wave',wave:window.BastionGameBridge?window.BastionGameBridge.getState().wave:0});return result};wrapped.__mpWrapped=true;window.startWave=wrapped}};
  // Classic scripts' top-level lexical bindings are not window properties. Use a small global bridge below.
- window.BastionMP={sendEvent:(event,payload={})=>{if(joined)send({type:'event',event,...payload})},get connected(){return joined},get room(){return room}};
+ window.BastionMP={sendEvent:(event,payload={})=>{if(joined)send({type:'event',event,...payload})},get connected(){return joined},get room(){return room},
+   // Retourne true si le lancement est local (solo), false s'il est géré par la salle.
+   requestStart:mode=>{if(!joined)return true;if(!isHost){say("Seul l'hôte peut lancer la partie.");bannerSafe("En attente de l'hôte…");return false}if(!peerId){say('Attends que ton coéquipier rejoigne la salle.');return false}send({type:'start',mode});say('Lancement…');return false}};
 })();
